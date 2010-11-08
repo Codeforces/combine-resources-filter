@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>com.codeforces.filter</groupId>
+  <artifactId>combine-resources-filter</artifactId>
+  <version>0.1</version>
+  <versioning>
+    <versions>
+      <version>0.1</version>
+    </versions>
+    <lastUpdated>20101108043334</lastUpdated>
+  </versioning>
+</metadata>
