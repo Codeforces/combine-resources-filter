@@ -508,11 +508,11 @@ public class CombineResourcesUtil {
                 }
             }
 
-            if (cssUpdated) {
+            if (cssUpdated && !StringUtils.isBlank(Configuration.getCssCommandAfterUpdate())) {
                 runCommand(Configuration.getCssLocalDir(), Configuration.getCssCommandAfterUpdate(), Configuration.getCommandAfterUpdateTimelimit());
             }
 
-            if (jsUpdated) {
+            if (jsUpdated && !StringUtils.isBlank(Configuration.getJsCommandAfterUpdate())) {
                 runCommand(Configuration.getJsLocalDir(), Configuration.getJsCommandAfterUpdate(), Configuration.getCommandAfterUpdateTimelimit());
             }
 
