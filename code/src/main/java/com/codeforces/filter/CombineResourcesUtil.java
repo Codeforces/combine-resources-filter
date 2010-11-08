@@ -196,6 +196,7 @@ public class CombineResourcesUtil {
 
                     if (!first) {
                         combineWriter.write("\n;\n");
+                        concatWriter.write("\n;\n");
                     } else {
                         first = false;
                     }
