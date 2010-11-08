@@ -195,7 +195,7 @@ public class CombineResourcesUtil {
                     logger.debug("Downloaded " + jsFile + "[type=js].");
 
                     if (!first) {
-                        combineWriter.write('\n');
+                        combineWriter.write("\n;\n");
                     } else {
                         first = false;
                     }
