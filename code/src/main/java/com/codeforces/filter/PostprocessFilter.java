@@ -26,7 +26,7 @@ public abstract class PostprocessFilter implements Filter {
             OutputStream outputStream = response.getOutputStream();
             byte[] bytes = responseWrapper.getBytes();
 
-            if (Configuration.getProcessTypes().contains(response.getContentType())) {
+            if (Configuration.getProcessTypes().contains(contentType)) {
                 String encoding = response.getCharacterEncoding();
                 String responseText = new String(bytes, encoding);
                 String postprocessedText = postprocess((HttpServletRequest) request, responseText);
