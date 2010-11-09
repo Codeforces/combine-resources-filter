@@ -45,6 +45,10 @@ public class Configuration {
         return Long.parseLong(properties.getProperty("command-after-update-timelimit"));
     }
 
+    public static boolean isFilterEnabled() {
+        return Boolean.parseBoolean(properties.getProperty("filter-enabled", "true"));
+    }
+
     static {
         try {
             properties.load(Configuration.class.getResourceAsStream("/CombineResourcesFilter.properties"));

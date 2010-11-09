@@ -17,7 +17,7 @@ public abstract class PostprocessFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
+        if (request instanceof HttpServletRequest && response instanceof HttpServletResponse && Configuration.isFilterEnabled()) {
             ResponseWrapper responseWrapper = new ResponseWrapper((HttpServletResponse) response);
             chain.doFilter(request, responseWrapper);
 
