@@ -1,13 +1,19 @@
 package com.codeforces.filter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * @author Mike Mirzayanov (mirzayanovmr@gmail.com)
  */
 public class Configuration {
     private static final Properties properties = new Properties();
+
+    private static volatile Boolean filterEnabled = null;
+    private static volatile Set<String> processTypes = null;
 
     public static String getCssUrlPrefix() {
         return properties.getProperty("css-url-prefix");
@@ -46,7 +52,17 @@ public class Configuration {
     }
 
     public static boolean isFilterEnabled() {
-        return Boolean.parseBoolean(properties.getProperty("filter-enabled", "true"));
+        if (filterEnabled == null) {
+            filterEnabled = Boolean.parseBoolean(properties.getProperty("filter-enabled", "true"));
+        }
+        return filterEnabled;
+    }
+
+    public static Set<String> getProcessTypes() {
+        if (processTypes == null) {
+            processTypes = new HashSet<String>(Arrays.asList(properties.getProperty("filter-enabled", "").split("[;,]+")));
+        }
+        return processTypes;
     }
 
     static {
