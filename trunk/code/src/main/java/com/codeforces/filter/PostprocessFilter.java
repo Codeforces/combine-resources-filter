@@ -18,17 +18,21 @@ public abstract class PostprocessFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         if (request instanceof HttpServletRequest && response instanceof HttpServletResponse
-                && Configuration.isFilterEnabled() && Configuration.getProcessTypes().contains(response.getContentType())) {
+                && Configuration.isFilterEnabled()) {
             ResponseWrapper responseWrapper = new ResponseWrapper((HttpServletResponse) response);
             chain.doFilter(request, responseWrapper);
-
-            String encoding = response.getCharacterEncoding();
-            String responseText = new String(responseWrapper.getBytes(), encoding);
-            String postprocessedText = postprocess((HttpServletRequest) request,
-                    responseText);
+            String contentType = responseWrapper.getContentType();
 
             OutputStream outputStream = response.getOutputStream();
-            byte[] bytes = postprocessedText.getBytes(encoding);
+            byte[] bytes = responseWrapper.getBytes();
+
+            if (Configuration.getProcessTypes().contains(response.getContentType())) {
+                String encoding = response.getCharacterEncoding();
+                String responseText = new String(bytes, encoding);
+                String postprocessedText = postprocess((HttpServletRequest) request, responseText);
+                bytes = postprocessedText.getBytes(encoding);
+            }
+
             response.setContentLength(bytes.length);
             outputStream.write(bytes);
             outputStream.flush();
