@@ -1,8 +1,10 @@
 package com.codeforces.filter;
 
+import com.codeforces.jrun.Outcome;
+import com.codeforces.jrun.Params;
+import com.codeforces.jrun.ProcessRunner;
 import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
-import org.apache.commons.exec.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -22,6 +24,7 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Mike Mirzayanov (mirzayanovmr@gmail.com)
@@ -30,7 +33,7 @@ public class CombineResourcesUtil {
     /**
      * Cache just from the hash of the head section to the postprocessed head section.
      */
-    private static final Map<String, String> cache = new Hashtable<String, String>();
+    private static final Map<String, String> cache = new ConcurrentHashMap<String, String>();
 
     /**
      * Logger.
@@ -110,7 +113,7 @@ public class CombineResourcesUtil {
                     IOUtils.copy(inputStream, outputStream);
                     outputStream.close();
                     inputStream.close();
-                    logger.debug("Downloaded " + cssFile + "[type=js].");
+                    //logger.debug("Downloaded " + cssFile + "[type=js].");
 
                     if (!first) {
                         writer.write('\n');
@@ -127,7 +130,12 @@ public class CombineResourcesUtil {
                     }
                     reader.close();
 
-                    name.append(cssFile.getName().split("\\.")[0]).append(",");
+                    String fileName = cssFile.getName();
+                    int pos = fileName.lastIndexOf('.');
+                    if (pos >= 0) {
+                        fileName = fileName.substring(0, pos);
+                    }
+                    name.append(fileName).append(",");
                 }
 
                 writer.close();
@@ -192,7 +200,7 @@ public class CombineResourcesUtil {
                     IOUtils.copy(inputStream, outputStream);
                     outputStream.close();
                     inputStream.close();
-                    logger.debug("Downloaded " + jsFile + "[type=js].");
+                    //logger.debug("Downloaded " + jsFile + "[type=js].");
 
                     if (!first) {
                         combineWriter.write("\n;\n");
@@ -203,24 +211,28 @@ public class CombineResourcesUtil {
 
                     if (Configuration.jsMinification()) {
                         Reader reader = new FileReader(jsFile);
-                        JavaScriptCompressor jsCompressor = new JavaScriptCompressor(reader, new ErrorReporter() {
-                            @Override
-                            public void warning(String s, String s1, int i, String s2, int i1) {
-                                fails.add(true);
-                            }
+                        try {
+                            JavaScriptCompressor jsCompressor = new JavaScriptCompressor(reader, new ErrorReporter() {
+                                @Override
+                                public void warning(String s, String s1, int i, String s2, int i1) {
+                                    fails.add(true);
+                                }
 
-                            @Override
-                            public void error(String s, String s1, int i, String s2, int i1) {
-                                fails.add(true);
-                            }
+                                @Override
+                                public void error(String s, String s1, int i, String s2, int i1) {
+                                    fails.add(true);
+                                }
 
-                            @Override
-                            public EvaluatorException runtimeError(String s, String s1, int i, String s2, int i1) {
-                                fails.add(true);
-                                return null;
-                            }
-                        });
-                        jsCompressor.compress(combineWriter, 0, false, false, true, true);
+                                @Override
+                                public EvaluatorException runtimeError(String s, String s1, int i, String s2, int i1) {
+                                    fails.add(true);
+                                    return null;
+                                }
+                            });
+                            jsCompressor.compress(combineWriter, 0, false, false, true, true);
+                        } catch (Exception e) {
+                            fails.add(true);
+                        }
                         reader.close();
                     }
 
@@ -228,7 +240,12 @@ public class CombineResourcesUtil {
                     IOUtils.copy(reader, concatWriter);
                     reader.close();
 
-                    name.append(jsFile.getName().split("\\.")[0]).append(",");
+                    String fileName = jsFile.getName();
+                    int pos = fileName.lastIndexOf('.');
+                    if (pos >= 0) {
+                        fileName = fileName.substring(0, pos);
+                    }
+                    name.append(fileName).append(",");
                 }
 
                 combineWriter.close();
@@ -307,6 +324,12 @@ public class CombineResourcesUtil {
     private static int getType(Node node) {
         if (node instanceof Element) {
             Element element = (Element) node;
+
+            String id = element.getAttribute("id");
+            if (id.startsWith("nocomb")) {
+                return -1;
+            }
+
             if (element.getTagName().equalsIgnoreCase("link")
                     && element.getAttribute("rel").equalsIgnoreCase("stylesheet")
                     && element.getAttribute("type").equalsIgnoreCase("text/css")
@@ -401,9 +424,9 @@ public class CombineResourcesUtil {
     /**
      * Calculates hash for substring of s.
      *
-     * @param s String to calculate hash.
+     * @param s    String to calculate hash.
      * @param from Beginning index.
-     * @param to Ending index.
+     * @param to   Ending index.
      * @return Strong hash (used 128 bit), which used to uniquely determine a string.
      */
     private static String hashCode(String s, int from, int to) {
@@ -421,40 +444,27 @@ public class CombineResourcesUtil {
     /**
      * Runs specified command in the specified directory.
      *
-     * @param dir Home directory for running command.
-     * @param command Command to be executed.
+     * @param dir       Home directory for running command.
+     * @param command   Command to be executed.
      * @param timelimit Time limit in milliseconds.
      * @throws IOException if can't IO.
      */
     private static void runCommand(String dir, final String command, long timelimit) throws IOException {
-        CommandLine commandLine = CommandLine.parse(command);
-        DefaultExecutor executor = new DefaultExecutor();
-        ExecuteWatchdog watchdog = new ExecuteWatchdog(timelimit);
-        executor.setWatchdog(watchdog);
-        executor.setWorkingDirectory(new File(dir));
-        executor.execute(commandLine, new ExecuteResultHandler() {
-            @Override
-            public void onProcessComplete(int exitValue) {
-                if (exitValue == 0) {
-                    logger.info("Process \"" + command + "\" completed, exit code: " + exitValue + ".");
-                } else {
-                    logger.warn("Process \"" + command + "\" completed, exit code: " + exitValue + ".");
-                }
-            }
-
-            @Override
-            public void onProcessFailed(ExecuteException e) {
-                logger.warn("Process \"" + command + "\" failed, " + e.getMessage() + ".");
-            }
-        });
+        Params params = new Params.Builder().setTimeLimit(timelimit).setDirectory(new File(dir)).newInstance();
+        Outcome outcome = ProcessRunner.run(command, params);
+        if (outcome.getExitCode() != 0) {
+            logger.warn("Process \"" + command + "\" completed, exit code: " + outcome.getExitCode() + ".");
+        } else {
+            logger.info("Process \"" + command + "\" completed.");
+        }
     }
 
     /**
-     * @param head HTML head-section: looks like "<head>....</head>".
+     * @param head        HTML head-section: looks like "<head>....</head>".
      * @param documentUrl Document URL, which contains the given head.
      * @return Postprocessed head which contains combined CSS and JS.
      * @throws ParseException on parse errors.
-     * @throws IOException on IO errors.
+     * @throws IOException    on IO errors.
      */
     public static String preprocessHead(String head, URL documentUrl) throws ParseException, IOException {
         String hashCode = hashCode(head);
@@ -463,64 +473,69 @@ public class CombineResourcesUtil {
         if (result != null) {
             return result;
         } else {
-            DocumentFragment fragment = parseFragment(head, 0, head.length());
-            List<List<Node>> elements = split(fragment);
-
-            for (List<Node> nodeList : elements) {
-                for (Node node : nodeList) {
-                    if (node instanceof Element && ((Element) node).getTagName().equalsIgnoreCase("SCRIPT") && StringUtils.isEmpty(node.getTextContent())) {
-                        node.setTextContent(" ");
-                    }
-                }
-            }
-
-            boolean cssUpdated = false;
-            boolean jsUpdated = false;
-
-            for (List<Node> element : elements) {
-                if (element.size() > 1 && getType(element.get(0)) == 1) {
-                    List<File> newFiles = new ArrayList<File>();
-                    Node combineNone = combineCss(documentUrl, element, newFiles);
-                    if (!newFiles.isEmpty()) {
-                        cssUpdated = true;
-                    }
-                    if (combineNone != null) {
-                        for (Node node : element) {
-                            if (node != combineNone) {
-                                node.getParentNode().removeChild(node);
-                            }
-                        }
-                    }
-                }
-
-                if (element.size() > 1 && getType(element.get(0)) == 2) {
-                    List<File> newFiles = new ArrayList<File>();
-                    Node combineNone = combineJs(documentUrl, element, newFiles);
-                    if (!newFiles.isEmpty()) {
-                        jsUpdated = true;
-                    }
-                    if (combineNone != null) {
-                        for (Node node : element) {
-                            if (node != combineNone) {
-                                node.getParentNode().removeChild(node);
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (cssUpdated && !StringUtils.isBlank(Configuration.getCssCommandAfterUpdate())) {
-                runCommand(Configuration.getCssLocalDir(), Configuration.getCssCommandAfterUpdate(), Configuration.getCommandAfterUpdateTimelimit());
-            }
-
-            if (jsUpdated && !StringUtils.isBlank(Configuration.getJsCommandAfterUpdate())) {
-                runCommand(Configuration.getJsLocalDir(), Configuration.getJsCommandAfterUpdate(), Configuration.getCommandAfterUpdateTimelimit());
-            }
-
-            result = toString(fragment);
-            cache.put(hashCode, result);
-
-            return result;
+            return doPreprocessHead(head, documentUrl, hashCode);
         }
+    }
+
+    private static String doPreprocessHead(String head, URL documentUrl, String hashCode) throws ParseException, IOException {
+        String result;
+        DocumentFragment fragment = parseFragment(head, 0, head.length());
+        List<List<Node>> elements = split(fragment);
+
+        for (List<Node> nodeList : elements) {
+            for (Node node : nodeList) {
+                if (node instanceof Element && ((Element) node).getTagName().equalsIgnoreCase("SCRIPT") && StringUtils.isEmpty(node.getTextContent())) {
+                    node.setTextContent(" ");
+                }
+            }
+        }
+
+        boolean cssUpdated = false;
+        boolean jsUpdated = false;
+
+        for (List<Node> element : elements) {
+            if (element.size() > 1 && getType(element.get(0)) == 1) {
+                List<File> newFiles = new ArrayList<File>();
+                Node combineNone = combineCss(documentUrl, element, newFiles);
+                if (!newFiles.isEmpty()) {
+                    cssUpdated = true;
+                }
+                if (combineNone != null) {
+                    for (Node node : element) {
+                        if (node != combineNone) {
+                            node.getParentNode().removeChild(node);
+                        }
+                    }
+                }
+            }
+
+            if (element.size() > 1 && getType(element.get(0)) == 2) {
+                List<File> newFiles = new ArrayList<File>();
+                Node combineNone = combineJs(documentUrl, element, newFiles);
+                if (!newFiles.isEmpty()) {
+                    jsUpdated = true;
+                }
+                if (combineNone != null) {
+                    for (Node node : element) {
+                        if (node != combineNone) {
+                            node.getParentNode().removeChild(node);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (cssUpdated && !StringUtils.isBlank(Configuration.getCssCommandAfterUpdate())) {
+            runCommand(Configuration.getCssLocalDir(), Configuration.getCssCommandAfterUpdate(), Configuration.getCommandAfterUpdateTimelimit());
+        }
+
+        if (jsUpdated && !StringUtils.isBlank(Configuration.getJsCommandAfterUpdate())) {
+            runCommand(Configuration.getJsLocalDir(), Configuration.getJsCommandAfterUpdate(), Configuration.getCommandAfterUpdateTimelimit());
+        }
+
+        result = toString(fragment);
+        cache.put(hashCode, result);
+
+        return result;
     }
 }
