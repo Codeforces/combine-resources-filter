@@ -25,6 +25,8 @@ import java.io.*;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author Mike Mirzayanov (mirzayanovmr@gmail.com)
@@ -40,12 +42,11 @@ public class CombineResourcesUtil {
      */
     private static final Logger logger = Logger.getLogger(CombineResourcesFilter.class);
 
-    /**
-     * @param base Base document URL.
-     * @param path Resource path (relative or absolute).
-     * @return Absolute path to the resource.
-     */
-    private static String buildUrl(URL base, String path) {
+    private static final Random RANDOM = new Random();
+
+    private static final Lock lock = new ReentrantLock();
+
+    private static String internalBuildUrl(URL base, String path) {
         if (path == null || path.isEmpty()) {
             return path;
         }
@@ -63,6 +64,20 @@ public class CombineResourcesUtil {
                     + path;
         } else {
             return base + "/../" + path;
+        }
+    }
+
+    /**
+     * @param base Base document URL.
+     * @param path Resource path (relative or absolute).
+     * @return Absolute path to the resource.
+     */
+    private static String buildUrl(URL base, String path) {
+        String url = internalBuildUrl(base, path);
+        if (!url.contains("?")) {
+            return url + "?" + Long.toHexString(RANDOM.nextLong());
+        } else {
+            return url;
         }
     }
 
@@ -140,7 +155,8 @@ public class CombineResourcesUtil {
 
                 writer.close();
                 FileReader reader = new FileReader(combineFile);
-                name.append(hashCode(IOUtils.toString(reader))).append(".css");
+                String newName = hashCode(name.toString()) + "_" + hashCode(IOUtils.toString(reader)) + ".css";
+                name = new StringBuilder(newName);
                 reader.close();
 
                 File targetFile = new File(Configuration.getCssLocalDir(), name.toString());
@@ -257,8 +273,8 @@ public class CombineResourcesUtil {
                 } else {
                     reader = new FileReader(concatFile);
                 }
-
-                name.append(hashCode(IOUtils.toString(reader))).append(".js");
+                String newName = hashCode(name.toString()) + "_" + hashCode(IOUtils.toString(reader)) + ".js";
+                name = new StringBuilder(newName);
                 reader.close();
 
                 File targetFile = new File(Configuration.getJsLocalDir(), name.toString());
@@ -467,14 +483,33 @@ public class CombineResourcesUtil {
      * @throws IOException    on IO errors.
      */
     public static String preprocessHead(String head, URL documentUrl) throws ParseException, IOException {
+        head = ensuresHead(head);
+
         String hashCode = hashCode(head);
         String result = cache.get(hashCode);
 
         if (result != null) {
             return result;
         } else {
-            return doPreprocessHead(head, documentUrl, hashCode);
+            lock.lock();
+            try {
+                result = cache.get(hashCode);
+                if (result != null) {
+                    return result;
+                } else {
+                    return doPreprocessHead(head, documentUrl, hashCode);
+                }
+            } finally {
+                lock.unlock();
+            }
         }
+    }
+
+    private static String ensuresHead(String head) {
+        if (StringUtils.indexOfIgnoreCase(head, "<head>") < 0) {
+            head = "<head>" + head + "</head>";
+        }
+        return head;
     }
 
     private static String doPreprocessHead(String head, URL documentUrl, String hashCode) throws ParseException, IOException {
@@ -496,13 +531,13 @@ public class CombineResourcesUtil {
         for (List<Node> element : elements) {
             if (element.size() > 1 && getType(element.get(0)) == 1) {
                 List<File> newFiles = new ArrayList<File>();
-                Node combineNone = combineCss(documentUrl, element, newFiles);
+                Node combineNode = combineCss(documentUrl, element, newFiles);
                 if (!newFiles.isEmpty()) {
                     cssUpdated = true;
                 }
-                if (combineNone != null) {
+                if (combineNode != null) {
                     for (Node node : element) {
-                        if (node != combineNone) {
+                        if (node != combineNode) {
                             node.getParentNode().removeChild(node);
                         }
                     }
@@ -511,13 +546,13 @@ public class CombineResourcesUtil {
 
             if (element.size() > 1 && getType(element.get(0)) == 2) {
                 List<File> newFiles = new ArrayList<File>();
-                Node combineNone = combineJs(documentUrl, element, newFiles);
+                Node combineNode = combineJs(documentUrl, element, newFiles);
                 if (!newFiles.isEmpty()) {
                     jsUpdated = true;
                 }
-                if (combineNone != null) {
+                if (combineNode != null) {
                     for (Node node : element) {
-                        if (node != combineNone) {
+                        if (node != combineNode) {
                             node.getParentNode().removeChild(node);
                         }
                     }
