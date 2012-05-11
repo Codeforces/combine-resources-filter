@@ -13,20 +13,31 @@ import java.net.URL;
  * @author Mike Mirzayanov (mirzayanovmr@gmail.com)
  */
 public class CombineResourcesFilter extends PostprocessFilter {
+    private static final String CUSTOM_COMBINE_OPEN = "<!--CombineResourcesFilter-->";
+    private static final String CUSTOM_COMBINE_CLOSE = "<!--/CombineResourcesFilter-->";
+
     @Override
     public String postprocess(HttpServletRequest request, String responseText) throws IOException {
         if (responseText == null) {
             return responseText;
         }
 
-        int headStart = StringUtils.indexOfIgnoreCase(responseText, "<head>");
+        String openTag = "<head>";
+        String closeTag = "</head>";
+
+        if (responseText.contains(CUSTOM_COMBINE_OPEN)) {
+            openTag = CUSTOM_COMBINE_OPEN;
+            closeTag = CUSTOM_COMBINE_CLOSE;
+        }
+
+        int headStart = StringUtils.indexOfIgnoreCase(responseText, openTag);
         if (headStart >= 0) {
-            int headFinish = StringUtils.indexOfIgnoreCase(responseText, "</head>", headStart);
+            int headFinish = StringUtils.indexOfIgnoreCase(responseText, closeTag, headStart);
             if (headFinish >= 0) {
-                String head = responseText.substring(headStart, headFinish + "</head>".length());
+                String head = responseText.substring(headStart, headFinish + closeTag.length());
                 try {
                     head = CombineResourcesUtil.preprocessHead(head, new URL(request.getRequestURL().toString()));
-                    return responseText.substring(0, headStart) + head + responseText.substring(headFinish + "</head>".length());
+                    return responseText.substring(0, headStart) + head + responseText.substring(headFinish + closeTag.length());
                 } catch (ParseException e) {
                     throw new IllegalArgumentException(e);
                 }
