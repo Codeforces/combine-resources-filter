@@ -8,7 +8,8 @@
     <name>combine-resources-filter</name>
     <url>http://code.google.com/p/combine-resources-filter</url>
     <inceptionYear>2010</inceptionYear>
-    <description>Combines consecutive css (js) declarations in the response head section, also handles minification of
+    <description>
+        Combines consecutive css (js) declarations in the response head section, also handles minification of
         the combined files.
     </description>
 
@@ -37,10 +38,10 @@
     </scm>
 
     <repositories>
-       <repository>
-           <id>codeforces-commons</id>
-           <url>https://github.com/Codeforces/codeforces-commons/raw/master/repo/maven/</url>
-       </repository>
+        <repository>
+            <id>codeforces-commons</id>
+            <url>https://github.com/Codeforces/codeforces-commons/raw/master/repo/maven/</url>
+        </repository>
         <repository>
             <id>jrun</id>
             <url>http://jrun.googlecode.com/svn/trunk/repo/</url>
