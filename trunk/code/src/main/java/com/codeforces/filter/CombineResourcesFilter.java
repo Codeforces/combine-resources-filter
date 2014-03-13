@@ -37,7 +37,9 @@ public class CombineResourcesFilter extends PostprocessFilter {
                 String head = responseText.substring(headStart, headFinish + closeTag.length());
                 try {
                     head = CombineResourcesUtil.preprocessHead(head, new URL(request.getRequestURL().toString()));
-                    return responseText.substring(0, headStart) + head + responseText.substring(headFinish + closeTag.length());
+                    return responseText.substring(0, headStart + openTag.length())
+                            + head
+                            + responseText.substring(headFinish);
                 } catch (ParseException e) {
                     throw new IllegalArgumentException(e);
                 }
