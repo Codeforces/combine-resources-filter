@@ -40,7 +40,7 @@ public class CombineResourcesUtil {
     /**
      * Logger.
      */
-    private static final Logger logger = Logger.getLogger(CombineResourcesFilter.class);
+    private static final Logger logger = Logger.getLogger(CombineResourcesUtil.class);
 
     private static final Random RANDOM = new Random();
 
@@ -372,13 +372,13 @@ public class CombineResourcesUtil {
      * @return Fragment as List<List<Node>>, where element-sequences which should be combined are
      *         merged in the single List<Node>.
      */
-    private static List<List<Node>> split(DocumentFragment fragment) {
+    private static List<List<Node>> split(Node fragment) {
         List<List<Node>> elements = new ArrayList<List<Node>>();
 
         int previousType = -1;
         List<Node> current = new LinkedList<Node>();
 
-        NodeList nodeList = fragment.getFirstChild().getChildNodes();
+        NodeList nodeList = fragment.getChildNodes();
         for (int i = 0; i < nodeList.getLength(); i++) {
             Node node = nodeList.item(i);
             if (node instanceof Text) {
@@ -414,7 +414,7 @@ public class CombineResourcesUtil {
      * @return DocumentFragment as valid XHTML.
      * @throws ParseException if can't parse.
      */
-    private static String toString(DocumentFragment fragment) throws ParseException {
+    private static String toString(Node fragment) throws ParseException {
         try {
             DOMSource domSource = new DOMSource(fragment);
             StringWriter writer = new StringWriter();
@@ -497,7 +497,12 @@ public class CombineResourcesUtil {
                 if (result != null) {
                     return result;
                 } else {
-                    return doPreprocessHead(head, documentUrl, hashCode);
+                    result = doPreprocessHead(head, documentUrl, hashCode);
+
+                    result = result.replace("<HEAD>", "");
+                    result = result.replace("</HEAD>", "");
+
+                    return result;
                 }
             } finally {
                 lock.unlock();
@@ -514,7 +519,12 @@ public class CombineResourcesUtil {
 
     private static String doPreprocessHead(String head, URL documentUrl, String hashCode) throws ParseException, IOException {
         String result;
-        DocumentFragment fragment = parseFragment(head, 0, head.length());
+
+        Node fragment = parseFragment(head, 0, head.length());
+        while (!fragment.getNodeName().equalsIgnoreCase("HEAD")) {
+            fragment = fragment.getFirstChild();
+        }
+
         List<List<Node>> elements = split(fragment);
 
         for (List<Node> nodeList : elements) {
