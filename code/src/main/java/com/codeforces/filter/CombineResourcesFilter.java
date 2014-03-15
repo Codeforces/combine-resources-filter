@@ -34,7 +34,7 @@ public class CombineResourcesFilter extends PostprocessFilter {
         if (headStart >= 0) {
             int headFinish = StringUtils.indexOfIgnoreCase(responseText, closeTag, headStart);
             if (headFinish >= 0) {
-                String head = responseText.substring(headStart, headFinish + closeTag.length());
+                String head = responseText.substring(headStart + openTag.length(), headFinish);
                 try {
                     head = CombineResourcesUtil.preprocessHead(head, new URL(request.getRequestURL().toString()));
                     return responseText.substring(0, headStart + openTag.length())

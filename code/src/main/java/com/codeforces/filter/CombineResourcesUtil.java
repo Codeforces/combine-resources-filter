@@ -497,11 +497,12 @@ public class CombineResourcesUtil {
                 if (result != null) {
                     return result;
                 } else {
-                    result = doPreprocessHead(head, documentUrl, hashCode);
+                    result = doPreprocessHead(head, documentUrl);
 
                     result = result.replace("<HEAD>", "");
                     result = result.replace("</HEAD>", "");
 
+                    cache.put(hashCode, result);
                     return result;
                 }
             } finally {
@@ -517,7 +518,7 @@ public class CombineResourcesUtil {
         return head;
     }
 
-    private static String doPreprocessHead(String head, URL documentUrl, String hashCode) throws ParseException, IOException {
+    private static String doPreprocessHead(String head, URL documentUrl) throws ParseException, IOException {
         String result;
 
         Node fragment = parseFragment(head, 0, head.length());
@@ -578,9 +579,6 @@ public class CombineResourcesUtil {
             runCommand(Configuration.getJsLocalDir(), Configuration.getJsCommandAfterUpdate(), Configuration.getCommandAfterUpdateTimelimit());
         }
 
-        result = toString(fragment);
-        cache.put(hashCode, result);
-
-        return result;
+        return toString(fragment);
     }
 }
