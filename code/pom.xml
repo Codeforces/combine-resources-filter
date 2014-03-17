@@ -4,7 +4,7 @@
     <groupId>com.codeforces.filter</groupId>
     <artifactId>combine-resources-filter</artifactId>
     <packaging>jar</packaging>
-    <version>0.5</version>
+    <version>0.6</version>
     <name>combine-resources-filter</name>
     <url>http://code.google.com/p/combine-resources-filter</url>
     <inceptionYear>2010</inceptionYear>
