@@ -3,6 +3,7 @@ package com.codeforces.filter;
 import com.codeforces.jrun.Outcome;
 import com.codeforces.jrun.Params;
 import com.codeforces.jrun.ProcessRunner;
+import com.google.common.base.Strings;
 import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 import org.apache.commons.io.FileUtils;
@@ -47,24 +48,30 @@ public class CombineResourcesUtil {
     private static final Lock lock = new ReentrantLock();
 
     private static String internalBuildUrl(URL base, String path) {
-        if (path == null || path.isEmpty()) {
-            return path;
+        String result = null;
+
+        try {
+            if (path == null || path.isEmpty() || path.startsWith("http:") || path.startsWith("//")) {
+                result = Strings.nullToEmpty(path);
+            } else {
+                char c = path.charAt(0);
+
+                if (c == '/') {
+                    result = base.getProtocol() + "://"
+                            + base.getHost()
+                            + (base.getPort() != 80 && base.getPort() != -1 ? ":" + base.getPort() : "")
+                            + path;
+                } else {
+                    result = base + "/../" + path;
+                }
+            }
+        } finally {
+            if (result != null && result.startsWith("//")) {
+                result = "http:" + result;
+            }
         }
 
-        if (path.startsWith("http:")) {
-            return path;
-        }
-
-        char c = path.charAt(0);
-
-        if (c == '/') {
-            return base.getProtocol() + "://"
-                    + base.getHost()
-                    + (base.getPort() != 80 && base.getPort() != -1 ? ":" + base.getPort() : "")
-                    + path;
-        } else {
-            return base + "/../" + path;
-        }
+        return result;
     }
 
     /**
@@ -120,12 +127,12 @@ public class CombineResourcesUtil {
                 boolean first = true;
                 for (Node link : linkCss) {
                     String path = ((Element) link).getAttribute("href");
-
                     logger.info("Downloading css file: " + path + ".");
 
                     URL url = new URL(buildUrl(base, path));
-                    InputStream inputStream = url.openStream();
+                    logger.info("Prepared " + url);
 
+                    InputStream inputStream = url.openStream();
                     File cssFile = new File(dir, fileName(url));
 
                     FileOutputStream outputStream = new FileOutputStream(cssFile);
@@ -217,12 +224,12 @@ public class CombineResourcesUtil {
                 boolean first = true;
                 for (Node link : linkJs) {
                     String path = ((Element) link).getAttribute("src");
-
                     logger.info("Downloading js file: " + path + ".");
 
                     URL url = new URL(buildUrl(base, path));
-                    InputStream inputStream = url.openStream();
+                    logger.info("Prepared " + url);
 
+                    InputStream inputStream = url.openStream();
                     File jsFile = new File(dir, fileName(url));
 
                     FileOutputStream outputStream = new FileOutputStream(jsFile);
