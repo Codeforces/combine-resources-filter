@@ -1,0 +1,107 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.codeforces.filter</groupId>
+    <artifactId>combine-resources-filter</artifactId>
+    <packaging>jar</packaging>
+    <version>0.6</version>
+    <name>combine-resources-filter</name>
+    <url>http://code.google.com/p/combine-resources-filter</url>
+    <inceptionYear>2010</inceptionYear>
+    <description>
+        Combines consecutive css (js) declarations in the response head section, also handles minification of
+        the combined files.
+    </description>
+
+    <developers>
+        <developer>
+            <id>MikeMirzayanov</id>
+            <name>Mike Mirzayanov</name>
+            <email>mirzayanovmr@gmail.com</email>
+            <roles>
+                <role>owner, author</role>
+            </roles>
+            <timezone>+3</timezone>
+            <properties/>
+        </developer>
+    </developers>
+
+    <issueManagement>
+        <system>Google Code</system>
+        <url>http://code.google.com/p/combine-resources-filter/issues/list</url>
+    </issueManagement>
+
+    <scm>
+        <connection>scm:svn:http://combine-resources-filter.googlecode.com/svn/trunk</connection>
+        <developerConnection>scm:svn:https://combine-resources-filter.googlecode.com/svn/trunk</developerConnection>
+        <url>http://combine-resources-filter.googlecode.com/svn/trunk/</url>
+    </scm>
+
+    <repositories>
+        <repository>
+            <id>codeforces-commons</id>
+            <url>https://github.com/Codeforces/codeforces-commons/raw/master/repo/maven/</url>
+        </repository>
+        <repository>
+            <id>jrun</id>
+            <url>http://jrun.googlecode.com/svn/trunk/repo/</url>
+        </repository>
+    </repositories>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.codeforces</groupId>
+            <artifactId>commons</artifactId>
+            <version>2.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.yahoo.platform.yui</groupId>
+            <artifactId>yuicompressor</artifactId>
+            <version>2.4.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-exec</artifactId>
+            <version>1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.5</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.codeforces.jrun</groupId>
+            <artifactId>jrun</artifactId>
+            <version>0.2</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
