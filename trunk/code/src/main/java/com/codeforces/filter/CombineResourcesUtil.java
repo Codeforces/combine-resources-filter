@@ -35,7 +35,7 @@ public class CombineResourcesUtil {
     /**
      * Cache just from the hash of the head section to the postprocessed head section.
      */
-    private static final Map<String, String> cache = new ConcurrentHashMap<String, String>();
+    private static final Map<String, String> cache = new ConcurrentHashMap<>();
 
     /**
      * Logger.
@@ -97,7 +97,7 @@ public class CombineResourcesUtil {
 
     /**
      * @param base     Document base URL.
-     * @param linkCss  Consecutive <link>-nodes from the head which differs only in "href" attrubute.
+     * @param linkCss  Consecutive <link>-nodes from the head which differs only in "href" attribute.
      * @param newFiles Created combined files (actually at most one).
      * @return Postprocessed node, actually it is the first node from linkCss, but with change in "href".
      * @throws IOException if can IO.
@@ -115,9 +115,13 @@ public class CombineResourcesUtil {
                 File combineFile = new File(minDir, "style.css");
                 Writer writer = new FileWriter(combineFile);
 
+                logger.info("Started to combine css (" + linkCss.size() + " items).");
+
                 boolean first = true;
                 for (Node link : linkCss) {
                     String path = ((Element) link).getAttribute("href");
+
+                    logger.info("Downloading css file: " + path + ".");
 
                     URL url = new URL(buildUrl(base, path));
                     InputStream inputStream = url.openStream();
@@ -128,7 +132,8 @@ public class CombineResourcesUtil {
                     IOUtils.copy(inputStream, outputStream);
                     outputStream.close();
                     inputStream.close();
-                    //logger.debug("Downloaded " + cssFile + "[type=js].");
+
+                    logger.info("Downloaded css file: " + cssFile + "[url=" + path + ", size=" + FileUtils.sizeOf(cssFile) + "].");
 
                     if (!first) {
                         writer.write('\n');
@@ -138,12 +143,16 @@ public class CombineResourcesUtil {
 
                     Reader reader = new FileReader(cssFile);
                     if (Configuration.cssMinification()) {
+                        logger.info("Compressing css file: " + cssFile + "[url=" + path + ", size=" + FileUtils.sizeOf(cssFile) + "].");
+
                         CssCompressor cssCompressor = new CssCompressor(reader);
                         cssCompressor.compress(writer, 0);
                     } else {
                         IOUtils.copy(reader, writer);
                     }
                     reader.close();
+
+                    logger.info("Added css file to result: " + cssFile + "[url=" + path + ", size=" + FileUtils.sizeOf(cssFile) + "].");
 
                     String fileName = cssFile.getName();
                     int pos = fileName.lastIndexOf('.');
@@ -201,11 +210,15 @@ public class CombineResourcesUtil {
                 File concatFile = new File(minDir, "concat.js");
                 Writer combineWriter = new FileWriter(combineFile);
                 Writer concatWriter = new FileWriter(concatFile);
-                final List<Boolean> fails = new LinkedList<Boolean>();
+                final List<Boolean> fails = new LinkedList<>();
+
+                logger.info("Started to combine js (" + linkJs.size() + " items).");
 
                 boolean first = true;
                 for (Node link : linkJs) {
                     String path = ((Element) link).getAttribute("src");
+
+                    logger.info("Downloading js file: " + path + ".");
 
                     URL url = new URL(buildUrl(base, path));
                     InputStream inputStream = url.openStream();
@@ -216,7 +229,8 @@ public class CombineResourcesUtil {
                     IOUtils.copy(inputStream, outputStream);
                     outputStream.close();
                     inputStream.close();
-                    //logger.debug("Downloaded " + jsFile + "[type=js].");
+
+                    logger.info("Downloaded js file: " + jsFile + "[url=" + path + ", size=" + FileUtils.sizeOf(jsFile) + "].");
 
                     if (!first) {
                         combineWriter.write("\n;\n");
@@ -226,6 +240,8 @@ public class CombineResourcesUtil {
                     }
 
                     if (Configuration.jsMinification()) {
+                        logger.info("Compressing js file: " + jsFile + "[url=" + path + ", size=" + FileUtils.sizeOf(jsFile) + "].");
+
                         Reader reader = new FileReader(jsFile);
                         try {
                             JavaScriptCompressor jsCompressor = new JavaScriptCompressor(reader, new ErrorReporter() {
@@ -255,6 +271,8 @@ public class CombineResourcesUtil {
                     Reader reader = new FileReader(jsFile);
                     IOUtils.copy(reader, concatWriter);
                     reader.close();
+
+                    logger.info("Added js file to result: " + jsFile + "[url=" + path + ", size=" + FileUtils.sizeOf(jsFile) + "].");
 
                     String fileName = jsFile.getName();
                     int pos = fileName.lastIndexOf('.');
@@ -373,10 +391,10 @@ public class CombineResourcesUtil {
      *         merged in the single List<Node>.
      */
     private static List<List<Node>> split(Node fragment) {
-        List<List<Node>> elements = new ArrayList<List<Node>>();
+        List<List<Node>> elements = new ArrayList<>();
 
         int previousType = -1;
-        List<Node> current = new LinkedList<Node>();
+        List<Node> current = new LinkedList<>();
 
         NodeList nodeList = fragment.getChildNodes();
         for (int i = 0; i < nodeList.getLength(); i++) {
@@ -396,7 +414,7 @@ public class CombineResourcesUtil {
                 if (current.size() > 0) {
                     elements.add(current);
                 }
-                current = new LinkedList<Node>();
+                current = new LinkedList<>();
                 current.add(node);
                 previousType = type;
             }
@@ -488,14 +506,11 @@ public class CombineResourcesUtil {
         String hashCode = hashCode(head);
         String result = cache.get(hashCode);
 
-        if (result != null) {
-            return result;
-        } else {
+        if (result == null) {
             lock.lock();
             try {
-                result = cache.get(hashCode);
-                if (result != null) {
-                    return result;
+                if (cache.containsKey(hashCode)) {
+                    result = cache.get(hashCode);
                 } else {
                     result = doPreprocessHead(head, documentUrl);
 
@@ -503,12 +518,13 @@ public class CombineResourcesUtil {
                     result = result.replace("</HEAD>", "");
 
                     cache.put(hashCode, result);
-                    return result;
                 }
             } finally {
                 lock.unlock();
             }
         }
+
+        return result;
     }
 
     private static String ensuresHead(String head) {
@@ -519,8 +535,6 @@ public class CombineResourcesUtil {
     }
 
     private static String doPreprocessHead(String head, URL documentUrl) throws ParseException, IOException {
-        String result;
-
         Node fragment = parseFragment(head, 0, head.length());
         while (!fragment.getNodeName().equalsIgnoreCase("HEAD")) {
             fragment = fragment.getFirstChild();
@@ -541,7 +555,7 @@ public class CombineResourcesUtil {
 
         for (List<Node> element : elements) {
             if (element.size() > 1 && getType(element.get(0)) == 1) {
-                List<File> newFiles = new ArrayList<File>();
+                List<File> newFiles = new ArrayList<>();
                 Node combineNode = combineCss(documentUrl, element, newFiles);
                 if (!newFiles.isEmpty()) {
                     cssUpdated = true;
@@ -556,7 +570,7 @@ public class CombineResourcesUtil {
             }
 
             if (element.size() > 1 && getType(element.get(0)) == 2) {
-                List<File> newFiles = new ArrayList<File>();
+                List<File> newFiles = new ArrayList<>();
                 Node combineNode = combineJs(documentUrl, element, newFiles);
                 if (!newFiles.isEmpty()) {
                     jsUpdated = true;
