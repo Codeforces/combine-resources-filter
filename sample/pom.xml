@@ -6,12 +6,6 @@
     <packaging>war</packaging>
     <version>1.0-SNAPSHOT</version>
     <name>sample</name>
-    <repositories>
-         <repository>
-             <id>combine-resources-filter</id>
-             <url>http://combine-resources-filter.googlecode.com/svn/trunk/repo/</url>
-         </repository>
-     </repositories>
      <dependencies>
         <dependency>
             <groupId>com.codeforces.filter</groupId>

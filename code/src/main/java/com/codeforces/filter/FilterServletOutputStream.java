@@ -1,5 +1,7 @@
 package com.codeforces.filter;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.servlet.ServletOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -21,12 +23,12 @@ public class FilterServletOutputStream extends ServletOutputStream {
     }
 
     @Override
-    public void write(byte bytes[]) throws IOException {
+    public void write(@NotNull byte bytes[]) throws IOException {
         stream.write(bytes);
     }
 
     @Override
-    public void write(byte bytes[], int off, int length)
+    public void write(@NotNull byte bytes[], int off, int length)
             throws IOException {
         stream.write(bytes, off, length);
     }

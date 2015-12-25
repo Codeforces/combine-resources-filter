@@ -60,7 +60,7 @@ public class Configuration {
 
     public static Set<String> getProcessTypes() {
         if (processTypes == null) {
-            processTypes = new HashSet<String>(Arrays.asList(properties.getProperty("process-types", "").split("[;,]+")));
+            processTypes = new HashSet<>(Arrays.asList(properties.getProperty("process-types", "").split("[;,]+")));
         }
         return processTypes;
     }

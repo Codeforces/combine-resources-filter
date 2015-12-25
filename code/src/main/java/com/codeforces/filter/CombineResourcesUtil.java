@@ -1,5 +1,6 @@
 package com.codeforces.filter;
 
+import com.codeforces.commons.text.StringUtil;
 import com.codeforces.jrun.Outcome;
 import com.codeforces.jrun.Params;
 import com.codeforces.jrun.ProcessRunner;
@@ -8,7 +9,7 @@ import com.yahoo.platform.yui.compressor.CssCompressor;
 import com.yahoo.platform.yui.compressor.JavaScriptCompressor;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.html.dom.HTMLDocumentImpl;
 import org.apache.log4j.Logger;
 import org.cyberneko.html.parsers.DOMFragmentParser;
@@ -104,7 +105,7 @@ public class CombineResourcesUtil {
 
     /**
      * @param base     Document base URL.
-     * @param linkCss  Consecutive <link>-nodes from the head which differs only in "href" attribute.
+     * @param linkCss  Consecutive link-nodes from the head which differs only in href attribute.
      * @param newFiles Created combined files (actually at most one).
      * @return Postprocessed node, actually it is the first node from linkCss, but with change in "href".
      * @throws IOException if can IO.
@@ -198,9 +199,9 @@ public class CombineResourcesUtil {
 
     /**
      * @param base     Document base URL.
-     * @param linkJs   Consecutive <script>-nodes from the head which differs only in "src" attrubute.
+     * @param linkJs   Consecutive script-nodes from the head which differs only in src-attribute.
      * @param newFiles Created combined files (actually at most one).
-     * @return Postprocessed node, actually it is the first node from linkJs, but with change in "src".
+     * @return Postprocessed node, actually it is the first node from linkJs, but with change in src.
      * @throws IOException if can IO.
      */
     @SuppressWarnings({"ResultOfMethodCallIgnored"})
@@ -408,7 +409,7 @@ public class CombineResourcesUtil {
             Node node = nodeList.item(i);
             if (node instanceof Text) {
                 String text = node.getTextContent();
-                if (StringUtils.isBlank(text)) {
+                if (StringUtil.isBlank(text)) {
                     continue;
                 }
 
@@ -501,7 +502,7 @@ public class CombineResourcesUtil {
     }
 
     /**
-     * @param head        HTML head-section: looks like "<head>....</head>".
+     * @param head        HTML head-section: looks like "{@code <head>....</head>}".
      * @param documentUrl Document URL, which contains the given head.
      * @return Postprocessed head which contains combined CSS and JS.
      * @throws ParseException on parse errors.

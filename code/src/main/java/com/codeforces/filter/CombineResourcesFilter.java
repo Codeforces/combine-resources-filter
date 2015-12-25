@@ -1,6 +1,6 @@
 package com.codeforces.filter;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -12,6 +12,7 @@ import java.net.URL;
  *
  * @author Mike Mirzayanov (mirzayanovmr@gmail.com)
  */
+@SuppressWarnings("unused")
 public class CombineResourcesFilter extends PostprocessFilter {
     private static final String CUSTOM_COMBINE_OPEN = "<!--CombineResourcesFilter-->";
     private static final String CUSTOM_COMBINE_CLOSE = "<!--/CombineResourcesFilter-->";
@@ -19,7 +20,7 @@ public class CombineResourcesFilter extends PostprocessFilter {
     @Override
     public String postprocess(HttpServletRequest request, String responseText) throws IOException {
         if (responseText == null) {
-            return responseText;
+            return null;
         }
 
         String openTag = "<head>";
