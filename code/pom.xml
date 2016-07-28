@@ -4,7 +4,7 @@
     <groupId>com.codeforces.filter</groupId>
     <artifactId>combine-resources-filter</artifactId>
     <packaging>jar</packaging>
-    <version>0.7</version>
+    <version>0.7.1</version>
     <name>combine-resources-filter</name>
     <url>http://code.google.com/p/combine-resources-filter</url>
     <inceptionYear>2010</inceptionYear>
@@ -60,7 +60,7 @@
         <dependency>
             <groupId>com.codeforces</groupId>
             <artifactId>commons</artifactId>
-            <version>2.2-SNAPSHOT</version>
+            <version>2.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.yahoo.platform.yui</groupId>
@@ -96,7 +96,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
+                <version>3.5.1</version>
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>

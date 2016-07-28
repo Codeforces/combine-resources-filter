@@ -2,13 +2,15 @@
 <metadata>
   <groupId>com.codeforces.filter</groupId>
   <artifactId>combine-resources-filter</artifactId>
-  <version>0.4</version>
+  <version>0.7.1</version>
   <versioning>
     <versions>
       <version>0.4</version>
       <version>0.5</version>
       <version>0.6</version>
+      <version>0.7</version>
+      <version>0.7.1</version>
     </versions>
-    <lastUpdated>20140410124316</lastUpdated>
+    <lastUpdated>20160728110019</lastUpdated>
   </versioning>
 </metadata>
