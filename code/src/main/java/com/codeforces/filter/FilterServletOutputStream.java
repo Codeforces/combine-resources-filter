@@ -1,8 +1,8 @@
 package com.codeforces.filter;
 
-import org.jetbrains.annotations.NotNull;
-
+import javax.annotation.Nonnull;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -11,7 +11,7 @@ import java.io.OutputStream;
  * @author Mike Mirzayanov (mirzayanovmr@gmail.com)
  */
 public class FilterServletOutputStream extends ServletOutputStream {
-    private DataOutputStream stream;
+    private final DataOutputStream stream;
 
     public FilterServletOutputStream(OutputStream stream) {
         this.stream = new DataOutputStream(stream);
@@ -23,12 +23,12 @@ public class FilterServletOutputStream extends ServletOutputStream {
     }
 
     @Override
-    public void write(@NotNull byte bytes[]) throws IOException {
+    public void write(@Nonnull byte[] bytes) throws IOException {
         stream.write(bytes);
     }
 
     @Override
-    public void write(@NotNull byte bytes[], int off, int length)
+    public void write(@Nonnull byte[] bytes, int off, int length)
             throws IOException {
         stream.write(bytes, off, length);
     }
@@ -41,5 +41,15 @@ public class FilterServletOutputStream extends ServletOutputStream {
     @Override
     public void close() throws IOException {
         stream.close();
+    }
+
+    @Override
+    public boolean isReady() {
+        throw new UnsupportedOperationException("isReady is not implemented.");
+    }
+
+    @Override
+    public void setWriteListener(WriteListener writeListener) {
+        throw new UnsupportedOperationException("setWriteListener is not implemented.");
     }
 }
