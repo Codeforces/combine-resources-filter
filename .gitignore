@@ -1,5 +1,8 @@
-/code/.idea
-/code/target
-/code/*.iml
-/code/*.ipr
-/code/*.iws
+.idea
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+target/
