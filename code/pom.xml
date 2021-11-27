@@ -13,6 +13,14 @@
         the combined files.
     </description>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/Codeforces/combine-resources-filter</url>
+        </repository>
+    </distributionManagement>
+
     <developers>
         <developer>
             <id>MikeMirzayanov</id>
